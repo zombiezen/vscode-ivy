@@ -1,0 +1,69 @@
+{
+  "name": "ivy",
+	"publisher": "zombiezen",
+	"displayName": "Ivy",
+	"description": "Highlighting and notebooks for Ivy",
+	"version": "0.1.0",
+	"engines": {
+		"vscode": "^1.63.0"
+	},
+	"categories": [
+		"Programming Languages",
+		"Other"
+	],
+	"activationEvents": [
+		"onNotebook:markdown-notebook"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"languages": [
+			{
+				"id": "ivy",
+				"aliases": [
+					"Ivy",
+					"ivy"
+				],
+				"extensions": [".ivy"],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "ivy",
+				"scopeName": "source.ivy",
+				"path": "./syntaxes/ivy.tmLanguage.json"
+			}
+		],
+		"configuration": {
+			"title": "Ivy",
+			"properties": {
+				"ivy.ivyPath": {
+					"type": "string",
+					"default": "ivy",
+					"markdownDescription": "Path to `ivy` binary.",
+					"scope": "machine-overridable"
+				}
+			}
+		}
+	},
+	"extensionDependencies": [
+		"ms-vscode.vscode-markdown-notebook"
+	],
+	"scripts": {
+		"vscode:prepublish": "node build.js prepublish",
+		"compile": "tsc -p ./",
+		"esbuild": "node build.js",
+		"watch": "node build.js watch",
+		"lint": "eslint src --ext ts",
+		"test": "exit 1"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.63.0",
+		"@types/node": "14.x",
+		"@typescript-eslint/eslint-plugin": "^5.1.0",
+		"@typescript-eslint/parser": "^5.1.0",
+		"esbuild": "^0.14.2",
+		"eslint": "^8.1.0",
+		"typescript": "^4.4.4"
+	}
+}

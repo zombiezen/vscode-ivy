@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Ivy",
+  "scopeName": "source.ivy",
+  "patterns": [
+    {
+      "name": "comment.line.number-sign",
+      "match": "(#).*$\\n?",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.comment"
+        }
+      }
+    }
+  ]
+}
