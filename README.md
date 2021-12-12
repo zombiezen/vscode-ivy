@@ -9,18 +9,7 @@ that adds support for [Rob Pike's Ivy][] language.
 ## Features
 
 - **Syntax Highlighting**
-- **Notebooks**
-
-## Requirements
-
-Using notebooks requires Ivy to be installed:
-
-```shell
-go install robpike.io/ivy@latest
-```
-
-## Extension Settings
-
-This extension contributes the following settings:
-
-- `ivy.ivyPath`: Path to `ivy` binary.
+- **Notebooks** —
+  Evaluate Ivy expressions and programs from inside Visual Studio Code!
+  This extension includes a bundled version of Ivy,
+  so you can view and edit an Ivy notebook without installing Ivy first.
