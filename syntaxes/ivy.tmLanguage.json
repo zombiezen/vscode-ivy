@@ -11,6 +11,49 @@
           "name": "punctuation.definition.comment"
         }
       }
+    },
+    {
+      "name": "constant.numeric",
+      "match": "\\b\\d+\\b"
+    },
+    {
+      "name": "string.quoted.double",
+      "begin": "(\\\")",
+      "end": "(\\\")",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.begin"
+        }
+      },
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.end"
+        }
+      }
+    },
+    {
+      "name": "string.quoted.single",
+      "begin": "(')",
+      "end": "(')",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.begin"
+        }
+      },
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.end"
+        }
+      }
+    },
+    {
+      "name": "keyword.other.special-command",
+      "match": "^(\\)).*$\\n?",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.special-command"
+        }
+      }
     }
   ]
 }

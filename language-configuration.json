@@ -10,7 +10,9 @@
   "autoClosingPairs": [
     {"open": "(", "close": ")"},
     {"open": "[", "close": "]"},
-    {"open": "{", "close": "}"}
+    {"open": "{", "close": "}"},
+    {"open": "'", "close": "'", "notIn": ["comment"]},
+    {"open": "\"", "close": "\"", "notIn": ["comment"]},
   ],
   "autoCloseBefore": ";:.,=}])> \n\t",
   "surroundingPairs": [
