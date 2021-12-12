@@ -21,7 +21,9 @@ _ivyCallbacks = {};
 
 /// Interface exposed by ivy-wasm Go program.
 interface IvyNamespace {
-  run(input: string, callback: (stdout: string, stderr: string) => void): void;
+  newContext(): number;
+  destroyContext(id: number): void;
+  run(contextId: number, input: string, callback: (stdout: string, stderr: string) => void): void;
   exit(): void;
 }
 
@@ -31,25 +33,23 @@ export interface IvyOutput {
   stderr: string;
 }
 
-let callbackCounter = 0;
-
-/// Running instance of an Ivy evaluator.
+/// Ivy manages a running instance of the ivy-wasm Go program.
 export class Ivy implements vscode.Disposable {
+  private static _callbackCounter = 0;
+
   private readonly _wasmUri: vscode.Uri;
   private readonly _callbackName: string;
   private _namespacePromise: Promise<{ namespace: IvyNamespace, done: Promise<void> }> | undefined;
 
   constructor(extensionUri: vscode.Uri) {
     this._wasmUri = vscode.Uri.joinPath(extensionUri, 'out/ivy.wasm');
-    this._callbackName = '_ivyReady' + (callbackCounter++);
+    this._callbackName = '_ivyReady' + (Ivy._callbackCounter++);
   }
 
-  /// Evaluate an Ivy program.
-  async run(input: string): Promise<IvyOutput> {
-    const ivy = await this._getIvyModule();
-    return new Promise((resolve) => {
-      ivy.run(input, (stdout, stderr) => resolve({stdout, stderr}));
-    });
+  /// Start a new evaluator.
+  async newInstance(): Promise<IvyInstance> {
+    const api = await this._getIvyModule();
+    return new IvyInstanceImpl(api);
   }
 
   private _getIvyModule(): Promise<IvyNamespace> {
@@ -80,5 +80,31 @@ export class Ivy implements vscode.Disposable {
         return done;
       });
     }
+  }
+}
+
+/// Running instance of an Ivy evaluator.
+export interface IvyInstance extends vscode.Disposable {
+  /// Evaluate an Ivy program.
+  run(input: string): Promise<IvyOutput>;
+}
+
+class IvyInstanceImpl implements IvyInstance {
+  private readonly _api: IvyNamespace;
+  private readonly _context: number;
+
+  constructor(api: IvyNamespace) {
+    this._api = api;
+    this._context = this._api.newContext();
+  }
+
+  dispose() {
+    this._api.destroyContext(this._context);
+  }
+
+  async run(input: string): Promise<IvyOutput> {
+    return new Promise((resolve) => {
+      this._api.run(this._context, input, (stdout, stderr) => resolve({stdout, stderr}));
+    });
   }
 }

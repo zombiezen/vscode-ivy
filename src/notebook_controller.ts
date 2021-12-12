@@ -16,14 +16,41 @@
 
 import * as vscode from 'vscode';
 
-import { Ivy } from './ivy';
+import { Ivy, IvyInstance } from './ivy';
 
-export class NotebookController implements vscode.Disposable {
+class IvyDocument {
+  private _instance: IvyInstance;
   private _executionNumber: number;
+
+  constructor(instance: IvyInstance) {
+    this._instance = instance;
+    this._executionNumber = 1;
+  }
+
+  get instance() {
+    return this._instance;
+  }
+
+  nextExecutionNumber() {
+    return this._executionNumber++;
+  }
+
+  reset(instance: IvyInstance) {
+    this._instance = instance;
+    this._executionNumber = 1;
+  }
+}
+
+/// Glue between notebook UI and Ivy interpreters.
+export class NotebookController implements vscode.Disposable {
   private readonly _controller: vscode.NotebookController;
   private readonly _ivy: Ivy;
+  private readonly _documents: Map<vscode.NotebookDocument, IvyDocument>;
+  private readonly _notebookCloseListener: vscode.Disposable;
 
   constructor(ivy: Ivy) {
+    this._ivy = ivy;
+
     this._controller = vscode.notebooks.createNotebookController(
       'zombiezen-ivy-controller',
       'markdown-notebook',
@@ -33,28 +60,46 @@ export class NotebookController implements vscode.Disposable {
     this._controller.supportsExecutionOrder = true;
     this._controller.executeHandler = this._execute.bind(this);
 
-    this._ivy = ivy;
-    this._executionNumber = 1;
+    this._documents = new Map();
+    this._notebookCloseListener = vscode.workspace.onDidCloseNotebookDocument(
+      this._notebookClosed.bind(this));
+  }
+
+  /// Stop any Ivy evaluator running for the given notebook.
+  async restartKernel(notebook: vscode.NotebookDocument): Promise<void> {
+    const doc = this._documents.get(notebook);
+    if (!doc) {
+      return;
+    }
+    doc.reset(await this._ivy.newInstance());
   }
 
   private async _execute(
     cells: vscode.NotebookCell[],
-    _notebook: vscode.NotebookDocument,
+    notebook: vscode.NotebookDocument,
     _controller: vscode.NotebookController,
   ): Promise<void> {
+    let doc = this._documents.get(notebook);
+    if (!doc) {
+      // TODO(soon): This could start multiple instances.
+      // Keep a placeholder.
+      doc = new IvyDocument(await this._ivy.newInstance());
+      this._documents.set(notebook, doc);
+    }
     for (const cell of cells) {
-      await this._executeCell(cell);
+      await this._executeCell(doc, cell);
     }
   }
 
   private async _executeCell(
+    doc: IvyDocument,
     cell: vscode.NotebookCell,
   ): Promise<void> {
     const execution = this._controller.createNotebookCellExecution(cell);
-    execution.executionOrder = (this._executionNumber++);
+    execution.executionOrder = doc.nextExecutionNumber();
     execution.start(Date.now());
 
-    const { stdout, stderr } = await this._ivy.run(cell.document.getText());
+    const { stdout, stderr } = await doc.instance.run(cell.document.getText());
     const endTime = Date.now();
 
     const outputs = [
@@ -71,8 +116,21 @@ export class NotebookController implements vscode.Disposable {
     execution.end(!stderr, endTime);
   }
 
+  private async _notebookClosed(notebook: vscode.NotebookDocument) {
+    const doc = this._documents.get(notebook);
+    if (doc) {
+      doc.instance.dispose();
+    }
+    this._documents.delete(notebook);
+  }
+
   dispose() {
     // TODO(someday): Cancel/wait for any ongoing ivy subprocesses.
+
+    this._documents.forEach((doc) => doc.instance.dispose());
+    this._documents.clear();
+
+    this._notebookCloseListener.dispose();
     this._controller.dispose();
   }
 }

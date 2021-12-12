@@ -8,6 +8,7 @@
 		"vscode": "^1.62.0"
 	},
 	"categories": [
+		"Notebooks",
 		"Programming Languages",
 		"Other"
 	],
@@ -15,7 +16,8 @@
 		"notebookKernelMarkdownNotebook"
 	],
 	"activationEvents": [
-		"onNotebook:markdown-notebook"
+		"onNotebook:markdown-notebook",
+		"onCommand:ivy.restartKernel"
 	],
 	"main": "./out/extension.js",
 	"contributes": {

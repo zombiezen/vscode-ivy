@@ -21,8 +21,9 @@ import { NotebookController } from './notebook_controller';
 
 export function activate(context: vscode.ExtensionContext) {
 	const ivy = new Ivy(context.extensionUri);
-	context.subscriptions.push(new NotebookController(ivy));
 	context.subscriptions.push(ivy);
+	const controller = new NotebookController(ivy);
+	context.subscriptions.push(controller);
 }
 
 export function deactivate() {}

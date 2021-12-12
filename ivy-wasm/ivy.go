@@ -19,24 +19,62 @@ package main
 import (
 	"bytes"
 	"os"
+	"sync"
 	"syscall/js"
 
 	"robpike.io/ivy/config"
 	"robpike.io/ivy/exec"
 	"robpike.io/ivy/run"
+	"robpike.io/ivy/value"
 )
 
 type request struct {
+	vctx     value.Context
 	input    string
 	callback js.Value
 }
 
 var workQueue = make(chan request, 100)
 
+var contexts struct {
+	sync.Mutex
+	list []value.Context
+}
+
+func newContext(this js.Value, args []js.Value) interface{} {
+	cfg := new(config.Config)
+	cfg.SetMobile(true)
+	vctx := exec.NewContext(cfg)
+
+	contexts.Lock()
+	defer contexts.Unlock()
+	contexts.list = append(contexts.list, vctx)
+	return len(contexts.list) - 1
+}
+
+func destroyContext(this js.Value, args []js.Value) interface{} {
+	id := args[0].Int()
+	contexts.Lock()
+	defer contexts.Unlock()
+	if id < len(contexts.list) {
+		contexts.list[id] = nil
+	}
+	return nil
+}
+
 func startJob(this js.Value, args []js.Value) interface{} {
+	vctxID := args[0].Int()
+	contexts.Lock()
+	vctx := contexts.list[vctxID]
+	contexts.Unlock()
+	if vctx == nil {
+		panic("invalid context")
+	}
+
 	req := request{
-		input:    args[0].String(),
-		callback: args[1],
+		vctx:     vctx,
+		input:    args[1].String(),
+		callback: args[2],
 	}
 	select {
 	case workQueue <- req:
@@ -47,15 +85,12 @@ func startJob(this js.Value, args []js.Value) interface{} {
 }
 
 func runJobs(done <-chan struct{}) {
-	cfg := new(config.Config)
-	cfg.SetMobile(true)
-	vctx := exec.NewContext(cfg)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	for {
 		select {
 		case req := <-workQueue:
-			run.Ivy(vctx, req.input, &stdout, &stderr)
+			run.Ivy(req.vctx, req.input, &stdout, &stderr)
 			req.callback.Invoke(js.ValueOf(stdout.String()), js.ValueOf(stderr.String()))
 			stdout.Reset()
 			stderr.Reset()
@@ -68,7 +103,9 @@ func runJobs(done <-chan struct{}) {
 func main() {
 	cancel := make(chan struct{})
 	js.Global().Get("_ivyCallbacks").Call(os.Getenv("IVY_CALLBACK"), map[string]interface{}{
-		"run": js.FuncOf(startJob),
+		"run":            js.FuncOf(startJob),
+		"newContext":     js.FuncOf(newContext),
+		"destroyContext": js.FuncOf(destroyContext),
 		"exit": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 			close(cancel)
 			return nil
