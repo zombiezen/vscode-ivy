@@ -6,6 +6,10 @@
     "search.exclude": {
         "out": true // set this to false to include "out" folder in search results
     },
+    "go.toolsEnvVars": {
+        "GOOS": "js",
+        "GOARCH": "wasm"
+    },
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
     "typescript.tsc.autoDetect": "off"
 }

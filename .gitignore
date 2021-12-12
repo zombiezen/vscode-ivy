@@ -1,2 +1,4 @@
 node_modules/
 /out/
+*.wasm
+src/wasm_exec.js

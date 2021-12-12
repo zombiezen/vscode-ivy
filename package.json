@@ -11,6 +11,9 @@
 		"Programming Languages",
 		"Other"
 	],
+	"keywords": [
+		"notebookKernelMarkdownNotebook"
+	],
 	"activationEvents": [
 		"onNotebook:markdown-notebook"
 	],
@@ -33,18 +36,7 @@
 				"scopeName": "source.ivy",
 				"path": "./syntaxes/ivy.tmLanguage.json"
 			}
-		],
-		"configuration": {
-			"title": "Ivy",
-			"properties": {
-				"ivy.ivyPath": {
-					"type": "string",
-					"default": "ivy",
-					"markdownDescription": "Path to `ivy` binary.",
-					"scope": "machine-overridable"
-				}
-			}
-		}
+		]
 	},
 	"extensionDependencies": [
 		"ms-vscode.vscode-markdown-notebook"
@@ -58,8 +50,9 @@
 		"test": "exit 1"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.62.0",
+		"@types/golang-wasm-exec": "^1.15.0",
 		"@types/node": "14.x",
+		"@types/vscode": "^1.62.0",
 		"@typescript-eslint/eslint-plugin": "^5.1.0",
 		"@typescript-eslint/parser": "^5.1.0",
 		"esbuild": "^0.14.2",

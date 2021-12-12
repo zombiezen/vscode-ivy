@@ -1,11 +1,29 @@
-import { spawn } from 'child_process';
+// Copyright 2021 Ross Light
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import * as vscode from 'vscode';
+
+import { Ivy } from './ivy';
 
 export class NotebookController implements vscode.Disposable {
   private _executionNumber: number;
   private readonly _controller: vscode.NotebookController;
+  private readonly _ivy: Ivy;
 
-  constructor() {
+  constructor(ivy: Ivy) {
     this._controller = vscode.notebooks.createNotebookController(
       'zombiezen-ivy-controller',
       'markdown-notebook',
@@ -15,73 +33,42 @@ export class NotebookController implements vscode.Disposable {
     this._controller.supportsExecutionOrder = true;
     this._controller.executeHandler = this._execute.bind(this);
 
+    this._ivy = ivy;
     this._executionNumber = 1;
   }
 
   private async _execute(
     cells: vscode.NotebookCell[],
-    notebook: vscode.NotebookDocument,
+    _notebook: vscode.NotebookDocument,
     _controller: vscode.NotebookController,
   ): Promise<void> {
-    const config = vscode.workspace.getConfiguration('ivy', notebook.uri);
     for (const cell of cells) {
-      await this._executeCell(config, cell);
+      await this._executeCell(cell);
     }
   }
 
   private async _executeCell(
-    config: vscode.WorkspaceConfiguration,
     cell: vscode.NotebookCell,
   ): Promise<void> {
     const execution = this._controller.createNotebookCellExecution(cell);
     execution.executionOrder = (this._executionNumber++);
     execution.start(Date.now());
 
-    const ivy = spawn(config.get('ivyPath', 'ivy'), {
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    let stdoutBuffer = Buffer.alloc(0);
-    let stderrBuffer = Buffer.alloc(0);
-    ivy.stdout.on('data', (data: Buffer) => {
-      stdoutBuffer = Buffer.concat([stdoutBuffer, data]);
-    });
-    ivy.stderr.on('data', (data: Buffer) => {
-      stderrBuffer = Buffer.concat([stderrBuffer, data]);
-    });
-    const ivyPromise = new Promise((resolve) => {
-      ivy.on('close', (code) => resolve(code));
-    });
-
-    // Write cell data to ivy stdin.
-    const text = cell.document.getText();
-    await new Promise<void>((resolve, reject) => {
-      ivy.stdin.write(text, (error) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve();
-        }
-      });
-    });
-    await new Promise<void>((resolve) => {
-      ivy.stdin.end(resolve);
-    });
-
-    // Wait for ivy to complete then report status.
-    const ivyExitCode = await ivyPromise;
+    const { stdout, stderr } = await this._ivy.run(cell.document.getText());
     const endTime = Date.now();
+
     const outputs = [
       new vscode.NotebookCellOutput([
-        vscode.NotebookCellOutputItem.stdout(stdoutBuffer.toString()),
+        vscode.NotebookCellOutputItem.stdout(stdout),
       ])
     ];
-    if (stderrBuffer.length > 0) {
+    if (stderr.length > 0) {
       outputs.push(new vscode.NotebookCellOutput([
-        vscode.NotebookCellOutputItem.stderr(stderrBuffer.toString()),
+        vscode.NotebookCellOutputItem.stderr(stderr),
       ]));
     }
     await execution.replaceOutput(outputs);
-    execution.end(ivyExitCode === 0, endTime);
+    execution.end(!stderr, endTime);
   }
 
   dispose() {
