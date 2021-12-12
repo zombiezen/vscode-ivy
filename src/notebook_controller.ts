@@ -36,19 +36,17 @@ export class NotebookController implements vscode.Disposable {
     const execution = this._controller.createNotebookCellExecution(cell);
     execution.executionOrder = (this._executionNumber++);
     execution.start(Date.now());
-    const output = new vscode.NotebookCellOutput([]);
-    await execution.replaceOutput(output);
 
     const ivy = spawn(config.get('ivyPath', 'ivy'), {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
-    ivy.stdout.on('data', (data) => {
-      // TODO(soon): Synchronize?
-      execution.appendOutputItems([vscode.NotebookCellOutputItem.stdout(data)], output);
+    let stdoutBuffer = Buffer.alloc(0);
+    let stderrBuffer = Buffer.alloc(0);
+    ivy.stdout.on('data', (data: Buffer) => {
+      stdoutBuffer = Buffer.concat([stdoutBuffer, data]);
     });
-    ivy.stderr.on('data', (data) => {
-      // TODO(soon): Synchronize?
-      execution.appendOutputItems([vscode.NotebookCellOutputItem.stderr(data)], output);
+    ivy.stderr.on('data', (data: Buffer) => {
+      stderrBuffer = Buffer.concat([stderrBuffer, data]);
     });
     const ivyPromise = new Promise((resolve) => {
       ivy.on('close', (code) => resolve(code));
@@ -69,9 +67,21 @@ export class NotebookController implements vscode.Disposable {
       ivy.stdin.end(resolve);
     });
 
-    // Wait for ivy to complete and report status.
+    // Wait for ivy to complete then report status.
     const ivyExitCode = await ivyPromise;
-    execution.end(ivyExitCode === 0, Date.now());
+    const endTime = Date.now();
+    const outputs = [
+      new vscode.NotebookCellOutput([
+        vscode.NotebookCellOutputItem.stdout(stdoutBuffer.toString()),
+      ])
+    ];
+    if (stderrBuffer.length > 0) {
+      outputs.push(new vscode.NotebookCellOutput([
+        vscode.NotebookCellOutputItem.stderr(stderrBuffer.toString()),
+      ]));
+    }
+    await execution.replaceOutput(outputs);
+    execution.end(ivyExitCode === 0, endTime);
   }
 
   dispose() {
