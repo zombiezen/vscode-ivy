@@ -19,7 +19,6 @@ package main
 import (
 	"bytes"
 	"os"
-	"sync"
 	"syscall/js"
 
 	"robpike.io/ivy/config"
@@ -29,52 +28,18 @@ import (
 )
 
 type request struct {
-	vctx     value.Context
 	input    string
 	callback js.Value
 }
 
-var workQueue = make(chan request, 100)
+var workQueue = make(chan request, 1)
 
-var contexts struct {
-	sync.Mutex
-	list []value.Context
-}
-
-func newContext(this js.Value, args []js.Value) interface{} {
-	cfg := new(config.Config)
-	cfg.SetMobile(true)
-	vctx := exec.NewContext(cfg)
-
-	contexts.Lock()
-	defer contexts.Unlock()
-	contexts.list = append(contexts.list, vctx)
-	return len(contexts.list) - 1
-}
-
-func destroyContext(this js.Value, args []js.Value) interface{} {
-	id := args[0].Int()
-	contexts.Lock()
-	defer contexts.Unlock()
-	if id < len(contexts.list) {
-		contexts.list[id] = nil
-	}
-	return nil
-}
+var ivyContext value.Context
 
 func startJob(this js.Value, args []js.Value) interface{} {
-	vctxID := args[0].Int()
-	contexts.Lock()
-	vctx := contexts.list[vctxID]
-	contexts.Unlock()
-	if vctx == nil {
-		panic("invalid context")
-	}
-
 	req := request{
-		vctx:     vctx,
-		input:    args[1].String(),
-		callback: args[2],
+		input:    args[0].String(),
+		callback: args[1],
 	}
 	select {
 	case workQueue <- req:
@@ -90,7 +55,7 @@ func runJobs(done <-chan struct{}) {
 	for {
 		select {
 		case req := <-workQueue:
-			run.Ivy(req.vctx, req.input, &stdout, &stderr)
+			run.Ivy(ivyContext, req.input, &stdout, &stderr)
 			req.callback.Invoke(js.ValueOf(stdout.String()), js.ValueOf(stderr.String()))
 			stdout.Reset()
 			stderr.Reset()
@@ -101,11 +66,13 @@ func runJobs(done <-chan struct{}) {
 }
 
 func main() {
+	cfg := new(config.Config)
+	cfg.SetMobile(true)
+	ivyContext = exec.NewContext(cfg)
+
 	cancel := make(chan struct{})
 	js.Global().Get("_ivyCallbacks").Call(os.Getenv("IVY_CALLBACK"), map[string]interface{}{
-		"run":            js.FuncOf(startJob),
-		"newContext":     js.FuncOf(newContext),
-		"destroyContext": js.FuncOf(destroyContext),
+		"run": js.FuncOf(startJob),
 		"exit": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 			close(cancel)
 			return nil

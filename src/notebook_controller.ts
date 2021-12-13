@@ -16,36 +16,13 @@
 
 import * as vscode from 'vscode';
 
-import { Ivy, IvyInstance } from './ivy';
-
-class IvyDocument {
-  private _instance: IvyInstance;
-  private _executionNumber: number;
-
-  constructor(instance: IvyInstance) {
-    this._instance = instance;
-    this._executionNumber = 1;
-  }
-
-  get instance() {
-    return this._instance;
-  }
-
-  nextExecutionNumber() {
-    return this._executionNumber++;
-  }
-
-  reset(instance: IvyInstance) {
-    this._instance = instance;
-    this._executionNumber = 1;
-  }
-}
+import { Ivy, IvyInstance, IvyOutput } from './ivy';
 
 /// Glue between notebook UI and Ivy interpreters.
 export class NotebookController implements vscode.Disposable {
   private readonly _controller: vscode.NotebookController;
   private readonly _ivy: Ivy;
-  private readonly _documents: Map<vscode.NotebookDocument, IvyDocument>;
+  private readonly _documents: Map<vscode.NotebookDocument, Promise<IvyInstance>>;
   private readonly _notebookCloseListener: vscode.Disposable;
 
   constructor(ivy: Ivy) {
@@ -65,13 +42,15 @@ export class NotebookController implements vscode.Disposable {
       this._notebookClosed.bind(this));
   }
 
-  /// Stop any Ivy evaluator running for the given notebook.
-  async restartKernel(notebook: vscode.NotebookDocument): Promise<void> {
-    const doc = this._documents.get(notebook);
-    if (!doc) {
+  /// Stop the Ivy evaluator running for the given notebook.
+  async stopKernel(notebook: vscode.NotebookDocument): Promise<void> {
+    const promise = this._documents.get(notebook);
+    if (!promise) {
       return;
     }
-    doc.reset(await this._ivy.newInstance());
+    this._documents.delete(notebook);
+    const instance = await promise;
+    instance.dispose();
   }
 
   private async _execute(
@@ -79,29 +58,34 @@ export class NotebookController implements vscode.Disposable {
     notebook: vscode.NotebookDocument,
     _controller: vscode.NotebookController,
   ): Promise<void> {
-    let doc = this._documents.get(notebook);
-    if (!doc) {
-      // TODO(soon): This could start multiple instances.
-      // Keep a placeholder.
-      doc = new IvyDocument(await this._ivy.newInstance());
-      this._documents.set(notebook, doc);
-    }
     for (const cell of cells) {
-      await this._executeCell(doc, cell);
+      await this._executeCell(notebook, cell);
     }
   }
 
   private async _executeCell(
-    doc: IvyDocument,
+    notebook: vscode.NotebookDocument,
     cell: vscode.NotebookCell,
   ): Promise<void> {
     const execution = this._controller.createNotebookCellExecution(cell);
-    execution.executionOrder = doc.nextExecutionNumber();
+    const instance = await this._getInstance(notebook);
+    execution.executionOrder = instance.runCount + 1;
     execution.start(Date.now());
 
-    const { stdout, stderr } = await doc.instance.run(cell.document.getText());
+    let result: IvyOutput;
+    try {
+      result = await instance.run(cell.document.getText());
+    } catch (e) {
+      const endTime = Date.now();
+      await execution.replaceOutput(new vscode.NotebookCellOutput([
+        vscode.NotebookCellOutputItem.error(e instanceof Error ? e : new Error(e + '')),
+      ]));
+      execution.end(false, endTime);
+      return;
+    }
     const endTime = Date.now();
 
+    const { stdout, stderr } = result;
     const outputs = [
       new vscode.NotebookCellOutput([
         vscode.NotebookCellOutputItem.stdout(stdout),
@@ -116,18 +100,44 @@ export class NotebookController implements vscode.Disposable {
     execution.end(!stderr, endTime);
   }
 
-  private async _notebookClosed(notebook: vscode.NotebookDocument) {
-    const doc = this._documents.get(notebook);
-    if (doc) {
-      doc.instance.dispose();
+  private _getInstance(notebook: vscode.NotebookDocument): Promise<IvyInstance> {
+    // Not using async here because
+    // I want to ensure promises are atomically available.
+
+    const oldPromise = this._documents.get(notebook);
+    let newPromise;
+    if (oldPromise) {
+      // Existing instance might not be alive anymore.
+      // Replace if needed.
+      newPromise = oldPromise.then((instance) => {
+        if (!instance.isAlive) {
+          instance.dispose();
+          return this._ivy.newInstance();
+        }
+        return instance;
+      });
+    } else {
+      // New document? New instance.
+      newPromise = this._ivy.newInstance();
+    }
+    this._documents.set(notebook, newPromise);
+    return newPromise;
+  }
+
+  private _notebookClosed(notebook: vscode.NotebookDocument): Promise<void> {
+    const promise = this._documents.get(notebook);
+    if (!promise) {
+      return Promise.resolve();
     }
     this._documents.delete(notebook);
+    return promise.then((instance) => instance.dispose());
   }
 
   dispose() {
-    // TODO(someday): Cancel/wait for any ongoing ivy subprocesses.
-
-    this._documents.forEach((doc) => doc.instance.dispose());
+    this._documents.forEach(async (instancePromise) => {
+      const instance = await instancePromise;
+      instance.dispose();
+    });
     this._documents.clear();
 
     this._notebookCloseListener.dispose();
