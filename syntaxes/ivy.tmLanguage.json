@@ -14,8 +14,27 @@
       "match": "\\b(e|pi)\\b"
     },
     {
-      "name": "keyword.control.ivy",
-      "match": "\\b(op)\\b"
+      "name": "meta.function.ivy",
+      "begin": "\\b(op)\\b",
+      "end": "(=)|$\\n?",
+      "beginCaptures": {
+        "1": {"name": "keyword.control.ivy"}
+      },
+      "endCaptures": {
+        "1": {"name": "keyword.operator.ivy"}
+      },
+      "patterns": [
+        {
+          "name": "meta.parameters.ivy",
+          "match": "\\b(?:((?:_|\\p{L}|\\p{Digit})+)\\s+)?((?:_|\\p{L}|\\p{Digit})+)\\s+((?:_|\\p{L}|\\p{Digit})+)\\s*([^=]*)",
+          "captures": {
+            "1": {"name": "variable.parameter.ivy"},
+            "2": {"name": "entity.name.function.ivy"},
+            "3": {"name": "variable.parameter.ivy"},
+            "4": {"name": "invalid.illegal.function.ivy"}
+          }
+        }
+      ]
     },
     {
       "name": "keyword.operator.ivy",
@@ -29,7 +48,7 @@
       "name": "keyword.control.special-command.ivy",
       "begin": "^(\\))",
       "end": "$\\n?",
-      "captures": {
+      "beginCaptures": {
         "1": {
           "name": "punctuation.definition.special-command.ivy"
         }
@@ -42,11 +61,11 @@
   ],
   "repository": {
     "comment": {
-      "name": "comment.line.number-sign",
+      "name": "comment.line.number-sign.ivy",
       "match": "(#).*$\\n?",
       "captures": {
         "1": {
-          "name": "punctuation.definition.comment"
+          "name": "punctuation.definition.comment.ivy"
         }
       }
     },
