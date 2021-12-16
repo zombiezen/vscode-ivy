@@ -3,7 +3,45 @@
   "name": "Ivy",
   "scopeName": "source.ivy",
   "patterns": [
+    {"include": "#comment"},
+    {"include": "#strings"},
     {
+      "name": "support.function.operator.ivy",
+      "match": "\\b(ceil|floor|rho|not|abs|iota|sgn|log|rot|flip|up|down|ivy|text|transp|sqrt|sin|cos|tan|asin|acos|atan|div|idiv|in|max|min|take|drop|decode|encode|mod|imod|fill|sel|or|and|nor|nand|xor|code|char|float)\\b"
+    },
+    {
+      "name": "support.constant.ivy",
+      "match": "\\b(e|pi)\\b"
+    },
+    {
+      "name": "keyword.control.ivy",
+      "match": "\\b(op)\\b"
+    },
+    {
+      "name": "keyword.operator.ivy",
+      "match": "\\*\\*?|<<|>>|\\bo.|[<>=!]=|[-+/\\\\?,!^<>&|.]"
+    },
+    {
+      "name": "constant.numeric.ivy",
+      "match": "\\b\\d+\\b"
+    },
+    {
+      "name": "keyword.control.special-command.ivy",
+      "begin": "^(\\))",
+      "end": "$\\n?",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.special-command.ivy"
+        }
+      },
+      "patterns": [
+        {"include": "#comment"},
+        {"include": "#strings"}
+      ]
+    }
+  ],
+  "repository": {
+    "comment": {
       "name": "comment.line.number-sign",
       "match": "(#).*$\\n?",
       "captures": {
@@ -12,48 +50,39 @@
         }
       }
     },
-    {
-      "name": "constant.numeric",
-      "match": "\\b\\d+\\b"
-    },
-    {
-      "name": "string.quoted.double",
-      "begin": "(\\\")",
-      "end": "(\\\")",
-      "beginCaptures": {
-        "1": {
-          "name": "punctuation.definition.string.begin"
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.ivy",
+          "begin": "(\\\")",
+          "end": "(\\\")",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.string.begin.ivy"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.string.end.ivy"
+            }
+          }
+        },
+        {
+          "name": "string.quoted.single.ivy",
+          "begin": "(')",
+          "end": "(')",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.string.begin.ivy"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.string.end.ivy"
+            }
+          }
         }
-      },
-      "endCaptures": {
-        "1": {
-          "name": "punctuation.definition.string.end"
-        }
-      }
-    },
-    {
-      "name": "string.quoted.single",
-      "begin": "(')",
-      "end": "(')",
-      "beginCaptures": {
-        "1": {
-          "name": "punctuation.definition.string.begin"
-        }
-      },
-      "endCaptures": {
-        "1": {
-          "name": "punctuation.definition.string.end"
-        }
-      }
-    },
-    {
-      "name": "keyword.other.special-command",
-      "match": "^(\\)).*$\\n?",
-      "captures": {
-        "1": {
-          "name": "punctuation.definition.special-command"
-        }
-      }
+      ]
     }
-  ]
+  }
 }
