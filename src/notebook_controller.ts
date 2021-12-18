@@ -18,7 +18,7 @@ import * as vscode from 'vscode';
 
 import { Ivy, IvyInstance, IvyOutput } from './ivy';
 
-/// Glue between notebook UI and Ivy interpreters.
+/// Glue between notebook UI and ivy interpreters.
 export class NotebookController implements vscode.Disposable {
   private readonly _controller: vscode.NotebookController;
   private readonly _ivy: Ivy;
@@ -31,7 +31,7 @@ export class NotebookController implements vscode.Disposable {
     this._controller = vscode.notebooks.createNotebookController(
       'zombiezen-ivy-controller',
       'markdown-notebook',
-      'Ivy'
+      'ivy'
     );
     this._controller.supportedLanguages = ['ivy'];
     this._controller.supportsExecutionOrder = true;
@@ -42,7 +42,7 @@ export class NotebookController implements vscode.Disposable {
       this._notebookClosed.bind(this));
   }
 
-  /// Stop the Ivy evaluator running for the given notebook.
+  /// Stop the ivy evaluator running for the given notebook.
   async stopKernel(notebook: vscode.NotebookDocument): Promise<void> {
     const promise = this._documents.get(notebook);
     if (!promise) {

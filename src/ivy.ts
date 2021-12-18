@@ -25,7 +25,7 @@ interface IvyNamespace {
   exit(): void;
 }
 
-/// Output from an invocation of Ivy.
+/// Output from an invocation of ivy.
 export interface IvyOutput {
   stdout: string;
   stderr: string;
@@ -72,12 +72,12 @@ export class Ivy implements vscode.Disposable {
   }
 }
 
-/// Running instance of an Ivy evaluator.
+/// Running instance of an ivy evaluator.
 export interface IvyInstance extends vscode.Disposable {
   /// Whether the instance is still running.
   readonly isAlive: boolean;
 
-  /// Evaluate an Ivy program.
+  /// Evaluate an ivy program.
   run(input: string): Promise<IvyOutput>;
 
   /// How many times run has been called.

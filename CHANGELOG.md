@@ -1,4 +1,4 @@
-# Ivy support for Visual Studio Code Changelog
+# Release Notes for ivy support for Visual Studio Code
 
 All notable changes to this project will be documented in this file.
 
