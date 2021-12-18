@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning][].
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
-[Unreleased]: https://github.com/zombiezen/vscode-ivy/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/zombiezen/vscode-ivy/compare/v0.1.1...HEAD
+
+## [0.1.1][] - 2021-12-17
+
+Fixed an issue preventing notebooks from working.
+
+[0.1.1]: https://github.com/zombiezen/vscode-ivy/releases/tag/v0.1.1
+
+### Fixed
+
+- Fixed bad extension manifest (invalid activation event).
 
 ## [0.1.0][] - 2021-12-17
 

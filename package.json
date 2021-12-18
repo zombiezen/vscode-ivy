@@ -1,6 +1,6 @@
 {
   "name": "ivy",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "ivy",
   "description": "Highlighting and notebooks for Rob Pike's ivy",
   "publisher": "zombiezen",
@@ -20,8 +20,7 @@
     "vscode": "^1.62.0"
   },
   "activationEvents": [
-    "onNotebook:markdown-notebook",
-    "onCommand:ivy.restartKernel"
+    "onNotebook:markdown-notebook"
   ],
   "main": "./out/extension.js",
   "contributes": {
