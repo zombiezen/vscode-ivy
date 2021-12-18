@@ -1,20 +1,24 @@
 {
   "name": "ivy",
-	"publisher": "zombiezen",
-	"displayName": "Ivy",
-	"description": "Highlighting and notebooks for Ivy",
 	"version": "0.1.0",
-	"engines": {
-		"vscode": "^1.62.0"
+	"displayName": "ivy",
+	"description": "Highlighting and notebooks for Rob Pike's ivy",
+	"publisher": "zombiezen",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/zombiezen/vscode-ivy.git"
 	},
+	"license": "Apache-2.0",
 	"categories": [
 		"Notebooks",
-		"Programming Languages",
-		"Other"
+		"Programming Languages"
 	],
 	"keywords": [
 		"notebookKernelMarkdownNotebook"
 	],
+	"engines": {
+		"vscode": "^1.62.0"
+	},
 	"activationEvents": [
 		"onNotebook:markdown-notebook",
 		"onCommand:ivy.restartKernel"
@@ -24,10 +28,7 @@
 		"languages": [
 			{
 				"id": "ivy",
-				"aliases": [
-					"Ivy",
-					"ivy"
-				],
+				"aliases": ["ivy"],
 				"extensions": [".ivy"],
 				"configuration": "./language-configuration.json"
 			}
