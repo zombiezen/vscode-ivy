@@ -1,6 +1,6 @@
 {
   "name": "ivy",
-  "version": "0.1.0-rc2",
+  "version": "0.1.0",
   "displayName": "ivy",
   "description": "Highlighting and notebooks for Rob Pike's ivy",
   "publisher": "zombiezen",

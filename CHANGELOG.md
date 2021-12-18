@@ -9,7 +9,11 @@ and this project adheres to [Semantic Versioning][].
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 [Unreleased]: https://github.com/zombiezen/vscode-ivy/compare/v0.1.0...HEAD
 
-## [Unreleased][]
+## [0.1.0][] - 2021-12-17
+
+First public release.
+
+[0.1.0]: https://github.com/zombiezen/vscode-ivy/releases/tag/v0.1.0
 
 ### Added
 
