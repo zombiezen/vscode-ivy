@@ -13,5 +13,5 @@ and this project adheres to [Semantic Versioning][].
 
 ### Added
 
-- Basic syntax highlight
+- Basic syntax highlighting
 - Notebook support

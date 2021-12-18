@@ -1,65 +1,70 @@
 {
   "name": "ivy",
-	"version": "0.1.0",
-	"displayName": "ivy",
-	"description": "Highlighting and notebooks for Rob Pike's ivy",
-	"publisher": "zombiezen",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/zombiezen/vscode-ivy.git"
-	},
-	"license": "Apache-2.0",
-	"categories": [
-		"Notebooks",
-		"Programming Languages"
-	],
-	"keywords": [
-		"notebookKernelMarkdownNotebook"
-	],
-	"engines": {
-		"vscode": "^1.62.0"
-	},
-	"activationEvents": [
-		"onNotebook:markdown-notebook",
-		"onCommand:ivy.restartKernel"
-	],
-	"main": "./out/extension.js",
-	"contributes": {
-		"languages": [
-			{
-				"id": "ivy",
-				"aliases": ["ivy"],
-				"extensions": [".ivy"],
-				"configuration": "./language-configuration.json"
-			}
-		],
-		"grammars": [
-			{
-				"language": "ivy",
-				"scopeName": "source.ivy",
-				"path": "./syntaxes/ivy.tmLanguage.json"
-			}
-		]
-	},
-	"extensionDependencies": [
-		"ms-vscode.vscode-markdown-notebook"
-	],
-	"scripts": {
-		"vscode:prepublish": "node build.js prepublish",
-		"compile": "tsc -p ./",
-		"esbuild": "node build.js",
-		"watch": "node build.js watch",
-		"lint": "eslint src --ext ts",
-		"test": "exit 1"
-	},
-	"devDependencies": {
-		"@types/golang-wasm-exec": "^1.15.0",
-		"@types/node": "14.x",
-		"@types/vscode": "^1.62.0",
-		"@typescript-eslint/eslint-plugin": "^5.1.0",
-		"@typescript-eslint/parser": "^5.1.0",
-		"esbuild": "^0.14.2",
-		"eslint": "^8.1.0",
-		"typescript": "^4.4.4"
-	}
+  "version": "0.1.0-rc1",
+  "displayName": "ivy",
+  "description": "Highlighting and notebooks for Rob Pike's ivy",
+  "publisher": "zombiezen",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zombiezen/vscode-ivy.git"
+  },
+  "license": "Apache-2.0",
+  "categories": [
+    "Notebooks",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "notebookKernelMarkdownNotebook"
+  ],
+  "engines": {
+    "vscode": "^1.62.0"
+  },
+  "activationEvents": [
+    "onNotebook:markdown-notebook",
+    "onCommand:ivy.restartKernel"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "ivy",
+        "aliases": [
+          "ivy"
+        ],
+        "extensions": [
+          ".ivy"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "ivy",
+        "scopeName": "source.ivy",
+        "path": "./syntaxes/ivy.tmLanguage.json"
+      }
+    ]
+  },
+  "extensionDependencies": [
+    "ms-vscode.vscode-markdown-notebook"
+  ],
+  "scripts": {
+    "vscode:prepublish": "node build.js prepublish",
+    "compile": "tsc -p ./",
+    "esbuild": "node build.js",
+    "watch": "node build.js watch",
+    "lint": "eslint src --ext ts",
+    "test": "exit 1"
+  },
+  "devDependencies": {
+    "@types/golang-wasm-exec": "^1.15.0",
+    "@types/node": "14.x",
+    "@types/vscode": "^1.62.0",
+    "@typescript-eslint/eslint-plugin": "^5.1.0",
+    "@typescript-eslint/parser": "^5.1.0",
+    "esbuild": "^0.14.2",
+    "eslint": "^8.1.0",
+    "typescript": "^4.4.4",
+    "vsce": "^2.5.3"
+  }
 }
