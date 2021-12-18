@@ -31,6 +31,6 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Publish
-        run: vsce publish
+        run: npx vsce publish
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
